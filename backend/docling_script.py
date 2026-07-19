@@ -11,11 +11,11 @@ def timer(func):
     def wrapper(*args, **kwargs):
 
         start = time.time()
-        print(f"[LOG] Calling: {func.__name__}")   
+        print(f"##########[LOG] Calling: {func.__name__}##############")   
         result = func(*args, **kwargs)              
         end = time.time()
         duration = end - start
-        print(f"[LOG] Returned in {duration} seconds")          
+        print(f"###########[LOG] Returned in {duration} seconds###########")          
 
 
         return result                              

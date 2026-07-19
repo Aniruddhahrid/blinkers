@@ -14,7 +14,12 @@ client = OpenAI(
 MODEL = "qwen2.5:7b"
 
 pdf_summary = pdf_summarize()
-print(pdf_summary)
+
+with open("parsed_output.md", "w", encoding="utf-8") as f:
+    f.write(pdf_summary)
+
+print(f"[LOG] Markdown saved, length: {len(pdf_summary)} characters")
+# print(pdf_summary)
 
 def chat(system: str,
     user: str,
@@ -26,17 +31,34 @@ def chat(system: str,
             {"role": "user", "content": user}
         ],
         temperature=temperature,
+        response_format={"type": "json_object"},
         max_tokens=5000
     )
     return response.choices[0].message.content.strip() if response else "Unknown error"
 
-result = chat(system = '''You receive the markdown file of a research paper. Turn it into concise, full sentence summaries, with each topic having 90-100 word-summars. Do not add table or diagram descriptions.
-OUTPUT FORMAT:
-1. 90-100 words per topic.
-2. {'card 1' : 'summary 1', 'card 2' : 'summary 2'} as many topics there are in the research paper.
+result = chat(system = '''You are a JSON generator. You receive a research paper in markdown.
+
+Output ONLY a single valid JSON object. Do not include any markdown formatting, headers, bullet points, explanations, or text before or after the JSON.
+
+Each key is a topic name (e.g., "card 1"), each value is a 90-100 word plain-text summary of that topic. Do not summarize tables or figures.
+
+Your entire response must start with { and end with }. Nothing else.
+
+Example output:
+{"card 1": "summary text here...", "card 2": "summary text here..."}
 ''', user = pdf_summary, temperature = 0.3)
 
+count = 0
+
 try:
-    cards = json.dumps(result)
+    cards = json.loads(result)
+    # if cards:
+    with open("summarized_output.md", "w", encoding="utf-8") as f:
+        for c_no, c_summary in cards.items():
+            count += 1
+            f.write(f"\n\t\t\t\tCARD {c_no}\t\t\t\t\n\t\t\t\tSUMMARY\t\t\t\t\n{c_summary}")
+
+        print(f"[LOG] {count} Summary cards written to file")
 except json.JSONDecodeError:
     print("Model didn't return valid JSON")
+    print(result)
