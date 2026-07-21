@@ -31,5 +31,6 @@ def pdf_summarize() -> str:
     pdf_summary = doc.document.export_to_markdown()
     if "## References" in pdf_summary:
         pdf_summary = pdf_summary.split("## References")[0]
+        print("#### References section stripped ####")
 
     return pdf_summary

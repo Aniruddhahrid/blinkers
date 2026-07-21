@@ -1,4 +1,5 @@
 #llm_simmarization.py
+import time
 import json
 from typing import Optional
 from openai import OpenAI
@@ -15,12 +16,29 @@ MODEL = "qwen2.5:7b"
 
 pdf_summary = pdf_summarize()
 
+print("\n#### [LOG] WRITING MD FILE ####\n")
+
 with open("parsed_output.md", "w", encoding="utf-8") as f:
     f.write(pdf_summary)
 
 print(f"[LOG] Markdown saved, length: {len(pdf_summary)} characters")
 # print(pdf_summary)
 
+def timer(func):
+    def wrapper(*args, **kwargs):
+
+        start = time.time()
+        print(f"##########[LOG] Calling: {func.__name__}##############")   
+        result = func(*args, **kwargs)              
+        end = time.time()
+        duration = end - start
+        print(f"###########[LOG] Returned in {duration} seconds###########")          
+
+
+        return result                              
+    return wrapper  
+
+@timer
 def chat(system: str,
     user: str,
     temperature: float = 0.0): 
@@ -32,7 +50,8 @@ def chat(system: str,
         ],
         temperature=temperature,
         response_format={"type": "json_object"},
-        max_tokens=5000
+        max_tokens=5000,
+        extra_body={"options": {"num_ctx": 16384}}
     )
     return response.choices[0].message.content.strip() if response else "Unknown error"
 
@@ -56,7 +75,7 @@ try:
     with open("summarized_output.md", "w", encoding="utf-8") as f:
         for c_no, c_summary in cards.items():
             count += 1
-            f.write(f"\n\t\t\t\tCARD {c_no}\t\t\t\t\n\t\t\t\tSUMMARY\t\t\t\t\n{c_summary}")
+            f.write(f"\n\t\t\t\tCARD {c_no}\t\t\t\t\n\t\t\t\tSUMMARY\t\t\t\t\n{c_summary}\n")
 
         print(f"[LOG] {count} Summary cards written to file")
 except json.JSONDecodeError:
